@@ -52,24 +52,6 @@
 #
 # - *Default*: 8000
 #
-# test
-# ----
-# The path to the test binary
-#
-# - *Default*: /usr/bin/test
-#
-# grep
-# ----
-# The path to the grep binary
-#
-# - *Default*: /bin/grep
-#
-# echo
-# ----
-# The path to the echo binary
-#
-# - *Default*: /usr/bin/grep
-#
 # users_allow
 # -----------
 # The full path to the users.allow file
@@ -110,9 +92,6 @@ class auditusers (
   $domain = 'example.com',
   $group = 'auditgroup',
   $gid = '8000',
-  $test = '/usr/bin/test',
-  $grep = '/bin/grep',
-  $echo = '/usr/bin/echo',
   $users_allow = '/etc/users.allow',
   $cron_minute = 'auto',
   $report_vol = '/var/run',
@@ -159,9 +138,10 @@ class auditusers (
   }
 
   exec { 'add_to_users.allow':
-    command => "${echo} ${user}@${domain} >> $users_allow",
-    onlyif  => "${test} -f $users_allow",
-    unless  => "${grep} ${user}@${domain} $users_allow > /dev/null",
+    path    => '/usr/xpg4/bin:/bin:/usr/bin:/sbin:/usr/sbin',
+    command => "echo ${user}@${domain} >> $users_allow",
+    onlyif  => "test -f $users_allow",
+    unless  => "grep -q ${user}@${domain} $users_allow",
   }
 
   group { 'audit_group':

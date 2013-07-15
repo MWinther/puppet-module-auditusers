@@ -35,8 +35,9 @@ describe 'auditusers' do
       })
 
       should contain_exec('add_to_users.allow').with({
-        'onlyif' => '/usr/bin/test -f /etc/users.allow',
-        'unless' => '/bin/grep audituser@example.com /etc/users.allow > /dev/null'
+        'command' => 'echo audituser@example.com >> /etc/users.allow',
+        'onlyif'  => 'test -f /etc/users.allow',
+        'unless'  => 'grep -q audituser@example.com /etc/users.allow',
       })
 
       should contain_group('audit_group').with({
@@ -168,48 +169,14 @@ report_vol = /var/run
     it {
 
       should contain_exec('add_to_users.allow').with({
-        'onlyif' => '/usr/bin/test -f /tmp/users.allow',
-        'unless' => '/bin/grep audituser@example.com /tmp/users.allow > /dev/null'
+        'command' => 'echo audituser@example.com >> /tmp/users.allow',
+        'onlyif'  => 'test -f /tmp/users.allow',
+        'unless'  => 'grep -q audituser@example.com /tmp/users.allow',
       })
 
     }
 
   end
-
-  describe 'when setting custom path to test' do
-
-    let(:params) {
-      {:test => '/tmp/test'}
-    }
-
-    it {
-
-      should contain_exec('add_to_users.allow').with({
-        'onlyif' => '/tmp/test -f /etc/users.allow',
-        'unless' => '/bin/grep audituser@example.com /etc/users.allow > /dev/null'
-      })
-
-    }
-
-  end
-
-  describe 'when setting custom path to grep' do
-
-    let(:params) {
-      {:grep => '/tmp/grep'}
-    }
-
-    it {
-
-      should contain_exec('add_to_users.allow').with({
-        'onlyif' => '/usr/bin/test -f /etc/users.allow',
-        'unless' => '/tmp/grep audituser@example.com /etc/users.allow > /dev/null'
-      })
-
-    }
-
-  end
-
 
   describe 'when setting custom group name' do
 

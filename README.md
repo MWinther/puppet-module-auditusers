@@ -56,18 +56,6 @@ The group ID for the auditing group
 
 - *Default*: 8000
 
-test
-----
-The path to the test binary
-
-- *Default*: /usr/bin/test
-
-grep
-----
-The path to the grep binary
-
-- *Default*: /bin/grep
-
 users\_allow
 -----------
 The full path to the users.allow file
