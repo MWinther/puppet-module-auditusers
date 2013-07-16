@@ -40,11 +40,24 @@
 #
 # - *Default*: example.com
 #
-# group
-# -----
-# The group membership for the auditing user
+# primary_group
+# -------------
+# The primary group membership for the auditing user
 #
 # - *Default*: auditgroup
+#
+# groups
+# ------
+# Any other (than the primary) groups the auditing user should belong to
+#
+# - *Default*: undef
+#
+# groups_membership
+# -----------------
+# Whether specified groups should be considered the complete list or the
+# minimum list.
+#
+# - *Default*: minimum
 #
 # gid
 # ---
@@ -104,7 +117,9 @@ class auditusers (
   $user = 'audituser',
   $uid = '9000',
   $domain = 'example.com',
-  $group = 'auditgroup',
+  $primary_group = 'auditgroup',
+  $groups = undef,
+  $groups_membership = 'minimum',
   $gid = '8000',
   $users_allow = '/etc/users.allow',
   $cron_minute = 'auto',
@@ -114,6 +129,23 @@ class auditusers (
   $report_dir = 'incoming',
   $hub = 'hub',
 ) {
+
+  if $groups == undef {
+    $the_groups = {}
+    $the_group_list = []
+  } else {
+    $the_groups = $groups
+    $the_group_defaults = {'ensure' => 'present',}
+    $the_group_list = keys($groups)
+  }
+
+  if $groups_membership == 'minimum' {
+    $the_groups_membership = $groups_membership
+  } elsif $groups_membership == 'inclusive' {
+    $the_groups_membership = $groups_membership
+  } else {
+    fail("auditusers::groups_membership can have either of the values 'minimum' or 'inclusive'. groups_membership is currently set to $groups_membership.")
+  }
 
   if $cron_minute == 'auto' {
     $the_minute = fqdn_rand(60)
@@ -173,19 +205,25 @@ class auditusers (
     unless  => "grep -q ${user}@${domain} $users_allow",
   }
 
-  group { 'audit_group':
-    name    => $group,
+  group { 'primary_group':
+    name    => $primary_group,
     ensure  => present,
     gid     => $gid,
     require => Exec['add_to_users.allow'],
   }
 
+  if $groups != undef {
+    create_resources(group, $the_groups)
+  }
+
   user { 'audit_user':
-    name    => $user,
-    ensure  => present,
-    uid     => $uid,
-    gid     => $group,
-    require => Group['audit_group']
+    name       => $user,
+    ensure     => present,
+    uid        => $uid,
+    gid        => $primary_group,
+    groups     => $the_group_list,
+    membership => $the_groups_membership,
+    require    => Group['primary_group'],
   }
 
   file { 'audit_script':
@@ -193,7 +231,7 @@ class auditusers (
     ensure  => present,
     mode    => 0750,
     owner   => 'root',
-    group   => $group,
+    group   => $primary_group,
     source  => "puppet:///modules/auditusers/${script_name}",
     require => [File['bindir'],
                 User['audit_user']],

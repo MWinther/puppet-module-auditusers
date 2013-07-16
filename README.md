@@ -44,11 +44,17 @@ The domain the user should use in the users.allow file
 
 - *Default*: example.com
 
-group
------
+primary\_group
+-------------
 The group membership for the auditing user
 
 - *Default*: auditgroup
+
+groups
+------
+Any other (than the primary) groups the auditing user should belong to
+
+- *Default*: undef
 
 gid
 ---

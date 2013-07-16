@@ -32,7 +32,7 @@ describe 'auditusers' do
         'unless'  => 'grep -q audituser@example.com /etc/users.allow',
       })
 
-      should contain_group('audit_group').with({
+      should contain_group('primary_group').with({
         'name'    => 'auditgroup',
         'ensure'  => 'present',
         'gid'     => '8000',
@@ -43,6 +43,7 @@ describe 'auditusers' do
         'ensure'  => 'present',
         'uid'     => '9000',
         'gid'     => 'auditgroup',
+        'groups'  => '',
       })
 
       should contain_file('audit_script').with({
@@ -152,15 +153,15 @@ describe 'auditusers' do
 
   end
 
-  describe 'when setting custom group name' do
+  describe 'when setting custom primary group name' do
 
     let(:params) {
-      {:group => 'test_grp'}
+      {:primary_group => 'test_grp'}
     }
 
     it {
 
-      should contain_group('audit_group').with({
+      should contain_group('primary_group').with({
         'name'    => 'test_grp',
         'ensure'  => 'present',
         'gid'     => '8000',
@@ -184,7 +185,7 @@ describe 'auditusers' do
 
   end
 
-  describe 'when setting custom group id' do
+  describe 'when setting custom primary group id' do
 
     let(:params) {
       {:gid => '9999'}
@@ -192,7 +193,7 @@ describe 'auditusers' do
 
     it {
 
-      should contain_group('audit_group').with({
+      should contain_group('primary_group').with({
         'name'    => 'auditgroup',
         'ensure'  => 'present',
         'gid'     => '9999',
@@ -210,6 +211,29 @@ describe 'auditusers' do
         'mode'   => '0750',
         'owner'  => 'root',
         'group'  => 'auditgroup',
+      })
+
+    }
+
+  end
+
+  describe 'when setting custom groups' do
+
+    let(:params) {
+      # FIXME: I would like to test two groups, but I the groups array needs to be
+      # unordered. I need to figure out how to do that first.
+      #{:groups => {'foo' => { 'gid' => '8888' }, 'bar' => { 'gid' => '8889' }}}
+      {:groups => {'foo' => { 'gid' => '8888' }}}
+    }
+
+    it {
+
+      should contain_user('audit_user').with({
+        'name'    => 'audituser',
+        'ensure'  => 'present',
+        'uid'     => '9000',
+        'gid'     => 'auditgroup',
+        'groups'  => ['foo'],
       })
 
     }
