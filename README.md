@@ -72,14 +72,28 @@ report\_vol
 -----------
 The volume on which to report the results
 
-- *Default*: /var/run
+- *Default*: /var/run/auditusers
+
+fstab\_entry
+------------
+The fstab entry as a mount resource hash. If undef, no mount/unmount will
+be performed.
+
+- *Default*: undef
+
+mount_report_vol
+----------------
+Whether the report_vol should be mounted or unmounted. Only used if
+fstab_entry is set to something other than *undef*
+
+- *Default*: true
 
 report\_dir
 -----------
 
 The directory in which to report the results relative to $report_vol
 
-- *Default*: auditusers
+- *Default*: incoming
 
 hub
 ---

@@ -68,13 +68,27 @@
 # ----------
 # The volume on which to report the results
 #
-# - *Default*: /var/run
+# - *Default*: /var/run/auditusers
+#
+# fstab_entry
+# -----------
+# The fstab entry as a mount resource hash. If set to undef, no mount/unmount
+# will be performed.
+#
+# - *Default*: undef
+#
+# mount_report_vol
+# ----------------
+# Whether the report_vol should be mounted or unmounted. Only used if
+# fstab_entry is set to something other than undef.
+#
+# - *Default*: true
 #
 # report_dir
 # ----------
 # The directory in which to report the results relative to $report_vol
 #
-# - *Default*: auditusers
+# - *Default*: incoming
 #
 # hub
 # ---
@@ -94,12 +108,12 @@ class auditusers (
   $gid = '8000',
   $users_allow = '/etc/users.allow',
   $cron_minute = 'auto',
-  $report_vol = '/var/run',
-  $report_dir = 'auditusers',
+  $report_vol = '/var/run/auditusers',
+  $fstab_entry = undef,
+  $mount_report_vol = true,
+  $report_dir = 'incoming',
   $hub = 'hub',
 ) {
-
-  $etcdir = '/etc/auditusers'
 
   if $cron_minute == 'auto' {
     $the_minute = fqdn_rand(60)
@@ -107,10 +121,33 @@ class auditusers (
     $the_minute = $cron_minute
   }
 
-  if $::auditusers_report_vol_mounted == 'true' {
-    $cron_ensure = 'present'
+  $mount_report_vol_type = type($mount_report_vol)
+  if $mount_report_vol_type == 'string' {
+    $should_mount_report_vol = str2bool($mount_report_vol)
   } else {
-    $cron_ensure = 'absent'
+    $should_mount_report_vol = $mount_report_vol
+  }
+
+  if $should_mount_report_vol == true {
+    $mount_report_vol_ensure = 'mounted'
+  } else {
+    $mount_report_vol_ensure = 'absent'
+  }
+
+  if $fstab_entry != undef {
+    if $should_mount_report_vol == true {
+      $report_vol_ensure = 'directory'
+    } else {
+      $report_vol_ensure = 'absent'
+    }
+    $fstab_entry_type = type($fstab_entry)
+    if $fstab_entry_type == 'hash' {
+      $my_fstab_entry = {'the_mount' => $fstab_entry, }
+      $mount_defaults = {'name'      => $report_vol,
+                         'ensure'    => $mount_report_vol_ensure,}
+    } else {
+      fail("fstab entry can either be a hash or undefined. fstab_entry is defined as $fstab_entry_type.")
+    }
   }
 
   file { 'basedir':
@@ -127,14 +164,6 @@ class auditusers (
     mode   => 0755,
     owner  => 'root',
     group  => 'root',
-  }
-
-  file { 'etcdir':
-    name   => "${etcdir}",
-    ensure => directory,
-    mode   => 0755,
-    owner  => 'root',
-    group  => "$group",
   }
 
   exec { 'add_to_users.allow':
@@ -170,13 +199,28 @@ class auditusers (
                 User['audit_user']],
   }
 
-  file { 'fact_config':
-    path    => "${etcdir}/fact_config",
-    ensure  => present,
-    mode    => 0644,
-    owner   => 'root',
-    group   => "$group",
-    content => template('auditusers/fact_config.erb'),
+  if $fstab_entry != undef {
+
+    if $mount_report_vol_ensure == 'mounted' {
+
+      file { 'report_vol':
+        path   => $report_vol,
+        ensure => 'directory',
+        before => Mount['the_mount'],
+      }
+
+    } else {
+
+      file { 'report_vol':
+        path    => $report_vol,
+        ensure  => 'absent',
+        force   => true,
+        require => Mount['the_mount'],
+      }
+
+    }
+
+    create_resources(mount, $my_fstab_entry, $mount_defaults)
   }
 
   cron { 'count_users':

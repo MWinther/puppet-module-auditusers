@@ -26,14 +26,6 @@ describe 'auditusers' do
         'mode'   => '0755',
       })
 
-      should contain_file('etcdir').with({
-        'ensure' => 'directory',
-        'path'   => '/etc/auditusers',
-        'owner'  => 'root',
-        'group'  => 'auditgroup',
-        'mode'   => '0755',
-      })
-
       should contain_exec('add_to_users.allow').with({
         'command' => 'echo audituser@example.com >> /etc/users.allow',
         'onlyif'  => 'test -f /etc/users.allow',
@@ -62,25 +54,15 @@ describe 'auditusers' do
         'source' => 'puppet:///modules/auditusers/auditscript.sh',
       })
 
-      should contain_file('fact_config').with({
-        'path' => '/etc/auditusers/fact_config',
-        'ensure' => 'present',
-        'mode' => '0644',
-        'owner' => 'root',
-        'group' => 'auditgroup',
-      })
-
-      should contain_file('fact_config').with_content(
-%{# This file is being maintained by Puppet.
-# DO NOT EDIT
-report_vol = /var/run
-})
+      should_not contain_file('report_vol')
 
       should contain_cron('count_users').with({
-        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers hub',
+        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
         'user'    => 'audituser',
         'minute'  => '48',
       })
+
+      should_not contain_mount('the_mount')
 
     }
 
@@ -114,14 +96,6 @@ report_vol = /var/run
         'mode'   => '0755',
       })
 
-      should contain_file('etcdir').with({
-        'ensure' => 'directory',
-        'path'   => '/etc/auditusers',
-        'owner'  => 'root',
-        'group'  => 'auditgroup',
-        'mode'   => '0755',
-      })
-
       should contain_file('audit_script').with({
         'path'   => '/tmp/bin/auditscript.sh',
         'ensure' => 'present',
@@ -131,7 +105,7 @@ report_vol = /var/run
       })
 
       should contain_cron('count_users').with({
-        'command' => '/tmp/bin/auditscript.sh /var/run/auditusers hub',
+        'command' => '/tmp/bin/auditscript.sh /var/run/auditusers/incoming hub',
         'user'    => 'audituser',
         'minute'  => '48',
       })
@@ -269,7 +243,7 @@ report_vol = /var/run
       })
 
       should contain_cron('count_users').with({
-        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers hub',
+        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
         'user'    => 'testuser',
         'minute'  => '48',
       })
@@ -305,7 +279,7 @@ report_vol = /var/run
       })
 
       should contain_cron('count_users').with({
-        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers hub',
+        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
         'user'    => 'audituser',
         'minute'  => '48',
       })
@@ -323,7 +297,7 @@ report_vol = /var/run
     it {
 
       should contain_cron('count_users').with({
-        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers hub',
+        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
         'user'    => 'audituser',
         'minute'  => '13',
       })
@@ -345,7 +319,7 @@ report_vol = /var/run
     it {
 
       should contain_cron('count_users').with({
-        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers hub',
+        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
         'user'    => 'audituser',
         'minute'  => '59',
       })
@@ -363,9 +337,87 @@ report_vol = /var/run
     it {
 
       should contain_cron('count_users').with({
-        'command' => '/opt/auditusers/bin/auditscript.sh /var/tmp/auditusers hub',
+        'command' => '/opt/auditusers/bin/auditscript.sh /var/tmp/incoming hub',
         'user'    => 'audituser',
         'minute'  => '45',
+      })
+
+    }
+
+  end
+
+  describe 'when setting mount_report_vol to false' do
+
+    let(:params) {
+      {:mount_report_vol => false}
+    }
+
+    it {
+
+      should_not contain_mount('the_mount')
+
+    }
+
+  end
+
+  describe 'when setting fstab_entry to a mount hash' do
+
+    let(:params) {
+      {:fstab_entry => {'device'   => '/dev/sdb',
+                        'fstype'   => 'ext3',
+                        'remounts' => true,
+                        'atboot'   => true,
+                        'options'  => '-',}}
+    }
+
+    it {
+
+      should contain_mount('the_mount').with({
+        'name'     => '/var/run/auditusers',
+        'ensure'   => 'mounted',
+        'device'   => '/dev/sdb',
+        'fstype'   => 'ext3',
+        'remounts' => true,
+        'atboot'   => true,
+        'options'  => '-',
+      })
+
+      should contain_file('report_vol').with({
+        'path'   => '/var/run/auditusers',
+        'ensure' => 'directory',
+      })
+
+    }
+
+  end
+
+  describe 'when setting fstab_entry to a mount hash and mount_report_vol to false' do
+
+    let(:params) {
+      { :fstab_entry => {'device'   => '/dev/sdb',
+                         'fstype'   => 'ext3',
+                         'remounts' => true,
+                         'atboot'   => true,
+                         'options'  => '-',},
+        :mount_report_vol => false,
+      }
+    }
+
+    it {
+
+      should contain_file('report_vol').with({
+        'path'   => '/var/run/auditusers',
+        'ensure' => 'absent',
+      })
+
+      should contain_mount('the_mount').with({
+        'name'     => '/var/run/auditusers',
+        'ensure'   => 'absent',
+        'device'   => '/dev/sdb',
+        'fstype'   => 'ext3',
+        'remounts' => true,
+        'atboot'   => true,
+        'options'  => '-',
       })
 
     }
@@ -381,7 +433,7 @@ report_vol = /var/run
     it {
 
       should contain_cron('count_users').with({
-        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/foo hub',
+        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/foo hub',
         'user'    => 'audituser',
         'minute'  => '45',
       })
