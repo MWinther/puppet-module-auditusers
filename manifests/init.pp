@@ -155,7 +155,7 @@ class auditusers (
     name    => $user,
     ensure  => present,
     uid     => $uid,
-    groups  => $group,
+    gid     => $group,
     require => Group['audit_group']
   }
 

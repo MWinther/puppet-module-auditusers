@@ -50,7 +50,7 @@ describe 'auditusers' do
         'name'    => 'audituser',
         'ensure'  => 'present',
         'uid'     => '9000',
-        'groups'  => 'auditgroup',
+        'gid'     => 'auditgroup',
       })
 
       should contain_file('audit_script').with({
@@ -196,7 +196,7 @@ report_vol = /var/run
         'name'    => 'audituser',
         'ensure'  => 'present',
         'uid'     => '9000',
-        'groups'  => 'test_grp',
+        'gid'     => 'test_grp',
       })
 
       should contain_file('audit_script').with({
@@ -228,7 +228,7 @@ report_vol = /var/run
         'name'    => 'audituser',
         'ensure'  => 'present',
         'uid'     => '9000',
-        'groups'  => 'auditgroup',
+        'gid'     => 'auditgroup',
       })
 
       should contain_file('audit_script').with({
@@ -258,7 +258,7 @@ report_vol = /var/run
         'name'    => 'testuser',
         'ensure'  => 'present',
         'uid'     => '9000',
-        'groups'  => 'auditgroup',
+        'gid'     => 'auditgroup',
       })
 
       should contain_file('audit_script').with({
@@ -294,7 +294,7 @@ report_vol = /var/run
         'name'    => 'audituser',
         'ensure'  => 'present',
         'uid'     => '9999',
-        'groups'  => 'auditgroup',
+        'gid'     => 'auditgroup',
       })
 
       should contain_file('audit_script').with({
