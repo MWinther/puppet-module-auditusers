@@ -43,7 +43,7 @@ describe 'auditusers' do
         'ensure'  => 'present',
         'uid'     => '9000',
         'gid'     => 'auditgroup',
-        'groups'  => '',
+        'groups'  => [],
       })
 
       should contain_file('audit_script').with({
@@ -354,6 +354,10 @@ describe 'auditusers' do
 
   describe 'when using a custom report_vol' do
 
+    let(:facts) {
+      {:fqdn => 'www.google.com'}
+    }
+
     let(:params) {
       {:report_vol => '/var/tmp'}
     }
@@ -363,7 +367,7 @@ describe 'auditusers' do
       should contain_cron('count_users').with({
         'command' => '/opt/auditusers/bin/auditscript.sh /var/tmp/incoming hub',
         'user'    => 'audituser',
-        'minute'  => '45',
+        'minute'  => '48',
       })
 
     }
@@ -450,6 +454,10 @@ describe 'auditusers' do
 
   describe 'when using a custom report_dir' do
 
+    let(:facts) {
+      {:fqdn => 'www.google.com'}
+    }
+
     let(:params) {
       {:report_dir => 'foo'}
     }
@@ -459,7 +467,7 @@ describe 'auditusers' do
       should contain_cron('count_users').with({
         'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/foo hub',
         'user'    => 'audituser',
-        'minute'  => '45',
+        'minute'  => '48',
       })
 
     }

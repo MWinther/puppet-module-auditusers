@@ -1,10 +1,21 @@
 # auditusers module #
 
+[![Build Status](
+https://api.travis-ci.org/MWinther/puppet-module-auditusers.png?branch=master)](https://travis-ci.org/MWinther/puppet-module-auditusers)
+
 This module handles the user auditing using the biit360 system.
+
+It optionally mounts a filesystem where the reporting should take place, and
+makes sure that the correct user, groups, script and cron job are available
+on the system. The actual reporting is done by the script that is run by the
+cron job.
 
 # Compatibility #
 
-This module is currently totally untested.
+This module has been tested to work on the following systems:
+
+ * RHEL 6
+ * Solaris 10
 
 # Parameters #
 
