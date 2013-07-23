@@ -59,6 +59,7 @@ describe 'auditusers' do
 
       should contain_cron('count_users').with({
         'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
+        'ensure'  => 'present',
         'user'    => 'audituser',
         'minute'  => '48',
       })
@@ -107,6 +108,7 @@ describe 'auditusers' do
 
       should contain_cron('count_users').with({
         'command' => '/tmp/bin/auditscript.sh /var/run/auditusers/incoming hub',
+        'ensure'  => 'present',
         'user'    => 'audituser',
         'minute'  => '48',
       })
@@ -268,6 +270,7 @@ describe 'auditusers' do
 
       should contain_cron('count_users').with({
         'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
+        'ensure'  => 'present',
         'user'    => 'testuser',
         'minute'  => '48',
       })
@@ -304,6 +307,7 @@ describe 'auditusers' do
 
       should contain_cron('count_users').with({
         'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
+        'ensure'  => 'present',
         'user'    => 'audituser',
         'minute'  => '48',
       })
@@ -322,6 +326,7 @@ describe 'auditusers' do
 
       should contain_cron('count_users').with({
         'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
+        'ensure'  => 'present',
         'user'    => 'audituser',
         'minute'  => '13',
       })
@@ -344,8 +349,27 @@ describe 'auditusers' do
 
       should contain_cron('count_users').with({
         'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
+        'ensure'  => 'present',
         'user'    => 'audituser',
         'minute'  => '59',
+      })
+
+    }
+
+  end
+
+  describe 'when setting cron ensure to absent' do
+
+    let(:params) {
+      {:cron_ensure => 'absent'}
+    }
+
+    it {
+
+      should contain_cron('count_users').with({
+        'command' => '/opt/auditusers/bin/auditscript.sh /var/run/auditusers/incoming hub',
+        'ensure'  => 'absent',
+        'user'    => 'audituser',
       })
 
     }
@@ -366,6 +390,7 @@ describe 'auditusers' do
 
       should contain_cron('count_users').with({
         'command' => '/opt/auditusers/bin/auditscript.sh /var/tmp/incoming hub',
+        'ensure'  => 'present',
         'user'    => 'audituser',
         'minute'  => '48',
       })

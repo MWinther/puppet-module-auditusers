@@ -85,6 +85,12 @@ The minute on the hour on which the script should run
 
 - *Default*: auto (randomized based on host)
 
+cron\_ensure
+-----------
+Which status the cron job should be ensured to have.
+
+- *Default*: present
+
 report\_vol
 -----------
 The volume on which to report the results

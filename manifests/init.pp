@@ -20,6 +20,7 @@ class auditusers (
   $gid               = '8000',
   $users_allow       = '/etc/users.allow',
   $cron_minute       = 'auto',
+  $cron_ensure       = 'present',
   $report_vol        = '/var/run/auditusers',
   $fstab_entry       = undef,
   $mount_report_vol  = true,
@@ -48,6 +49,10 @@ class auditusers (
     $the_minute = fqdn_rand(60)
   } else {
     $the_minute = $cron_minute
+  }
+
+  if ($cron_ensure != 'present') and ($cron_ensure != 'absent') {
+    fail("auditusers::cron_ensure can be either 'present' or 'absent'. It is currently set to ${cron_ensure}")
   }
 
   $mount_report_vol_type = type($mount_report_vol)
