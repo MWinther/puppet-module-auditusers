@@ -1,6 +1,11 @@
 # == Class: module-auditusers
 #
-# Full description of class module-auditusers here.
+# This module handles user auditing.
+#
+# It optionally mounts a filesystem where the reporting should take place, and
+# makes sure that the correct user, groups, script and cron job are available
+# on the system. The actual reporting is done by the auditing script, which
+# writes a file to the report directory.
 #
 class auditusers (
   $basedir           = '/opt/auditusers',
