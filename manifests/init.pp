@@ -26,6 +26,7 @@ class auditusers (
   $mount_report_vol  = true,
   $report_dir        = 'incoming',
   $hub               = 'hub',
+  $manage_user       = 'false',
 ) {
 
   if $groups == undef {
@@ -100,32 +101,29 @@ class auditusers (
     mode   => '0755',
   }
 
-  exec { 'add_to_users.allow':
-    path    => '/usr/xpg4/bin:/bin:/usr/bin:/sbin:/usr/sbin',
-    command => "echo ${user}@${domain} >> ${users_allow}",
-    onlyif  => "test -f ${users_allow}",
-    unless  => "grep -q ${user}@${domain} ${users_allow}",
-  }
+  if $manage_user == 'true' {
+    group { 'primary_group':
+      ensure  => present,
+      name    => $primary_group,
+      gid     => $gid,
+    }
 
-  group { 'primary_group':
-    ensure  => present,
-    name    => $primary_group,
-    gid     => $gid,
-    require => Exec['add_to_users.allow'],
-  }
+    if $groups != undef {
+      create_resources(group, $the_groups)
+    }
 
-  if $groups != undef {
-    create_resources(group, $the_groups)
-  }
-
-  user { 'audit_user':
-    ensure     => present,
-    name       => $user,
-    uid        => $uid,
-    gid        => $primary_group,
-    groups     => $the_group_list,
-    membership => $the_groups_membership,
-    require    => Group['primary_group'],
+    user { 'audit_user':
+      ensure     => present,
+      name       => $user,
+      uid        => $uid,
+      gid        => $primary_group,
+      groups     => $the_group_list,
+      membership => $the_groups_membership,
+      require    => Group['primary_group'],
+    }
+    $audit_script_require = [ File['bindir'], User['audit_user'], ]
+  } else {
+    $audit_script_require = File['bindir']
   }
 
   file { 'audit_script':
@@ -135,9 +133,7 @@ class auditusers (
     group   => $primary_group,
     mode    => '0750',
     source  => "puppet:///modules/auditusers/${script_name}",
-    require => [ File['bindir'],
-                User['audit_user'],
-                ],
+    require => $audit_script_require
   }
 
   if $fstab_entry != undef {
