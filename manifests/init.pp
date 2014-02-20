@@ -27,6 +27,7 @@ class auditusers (
   $report_dir        = 'incoming',
   $hub               = 'hub',
   $manage_user       = 'false',
+  $manage_users_allow = 'false',
 ) {
 
   if $groups == undef {
@@ -99,6 +100,15 @@ class auditusers (
     owner  => 'root',
     group  => 'root',
     mode   => '0755',
+  }
+
+  if $manage_users_allow == 'true' {
+    exec { 'add_to_users.allow':
+      path    => '/usr/xpg4/bin:/bin:/usr/bin:/sbin:/usr/sbin',
+      command => "echo ${user}@${domain} >> ${users_allow}",
+      onlyif  => "test -f ${users_allow}",
+      unless  => "grep -q ${user}@${domain} ${users_allow}",
+    }
   }
 
   if $manage_user == 'true' {

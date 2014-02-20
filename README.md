@@ -129,3 +129,9 @@ manage_user
 Manage user and group needed for script and cronjob
 
 - *Default*: false
+
+manage_users_allow
+------------------
+Manage users.allow entry
+
+- *Default*: false
