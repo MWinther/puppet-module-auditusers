@@ -26,26 +26,6 @@ describe 'auditusers' do
         'mode'   => '0755',
       })
 
-      should contain_exec('add_to_users.allow').with({
-        'command' => 'echo audituser@example.com >> /etc/users.allow',
-        'onlyif'  => 'test -f /etc/users.allow',
-        'unless'  => 'grep -q audituser@example.com /etc/users.allow',
-      })
-
-      should contain_group('primary_group').with({
-        'name'    => 'auditgroup',
-        'ensure'  => 'present',
-        'gid'     => '8000',
-      })
-
-      should contain_user('audit_user').with({
-        'name'    => 'audituser',
-        'ensure'  => 'present',
-        'uid'     => '9000',
-        'gid'     => 'auditgroup',
-        'groups'  => [],
-      })
-
       should contain_file('audit_script').with({
         'path'   => '/opt/auditusers/bin/auditscript.sh',
         'ensure' => 'present',
@@ -137,28 +117,12 @@ describe 'auditusers' do
 
   end
 
-  describe 'when setting custom users.allow location' do
-
-    let(:params) {
-      {:users_allow => '/tmp/users.allow'}
-    }
-
-    it {
-
-      should contain_exec('add_to_users.allow').with({
-        'command' => 'echo audituser@example.com >> /tmp/users.allow',
-        'onlyif'  => 'test -f /tmp/users.allow',
-        'unless'  => 'grep -q audituser@example.com /tmp/users.allow',
-      })
-
-    }
-
-  end
-
   describe 'when setting custom primary group name' do
 
     let(:params) {
-      {:primary_group => 'test_grp'}
+      {:primary_group => 'test_grp',
+       :manage_user   => 'true',
+      }
     }
 
     it {
@@ -190,7 +154,9 @@ describe 'auditusers' do
   describe 'when setting custom primary group id' do
 
     let(:params) {
-      {:gid => '9999'}
+      {:gid => '9999',
+       :manage_user   => 'true',
+      }
     }
 
     it {
@@ -225,7 +191,9 @@ describe 'auditusers' do
       # FIXME: I would like to test two groups, but I the groups array needs to be
       # unordered. I need to figure out how to do that first.
       #{:groups => {'foo' => { 'gid' => '8888' }, 'bar' => { 'gid' => '8889' }}}
-      {:groups => {'foo' => { 'gid' => '8888' }}}
+      {:groups => {'foo' => { 'gid' => '8888' }},
+       :manage_user   => 'true',
+      }
     }
 
     it {
@@ -249,7 +217,9 @@ describe 'auditusers' do
     }
 
     let(:params) {
-      {:user => 'testuser'}
+      {:user => 'testuser',
+       :manage_user   => 'true',
+      }
     }
 
     it {
@@ -286,7 +256,9 @@ describe 'auditusers' do
     }
 
     let(:params) {
-      {:uid => '9999'}
+      {:uid => '9999',
+       :manage_user   => 'true',
+      }
     }
 
     it {
