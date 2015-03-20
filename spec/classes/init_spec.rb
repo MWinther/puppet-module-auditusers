@@ -71,6 +71,18 @@ describe 'auditusers' do
     }
   end
 
+  describe 'when setting manage_user to an invalid type' do
+    let(:params) {
+      {:manage_user => ['true']}
+    }
+
+    it 'should fail' do
+      expect {
+        should contain_class('auditusers')
+      }.to raise_error(Puppet::Error,/\["true"\] is not a boolean.  It looks to be a Array/)
+    end
+  end
+
   describe 'when managing users.allow' do
     let(:params) {
       {:manage_users_allow => 'true'}
@@ -82,6 +94,18 @@ describe 'auditusers' do
         'unless'  => 'grep -q audituser@example.com /etc/users.allow',
       })
     }
+  end
+
+  describe 'when setting manage_users_allow to an invalid type' do
+    let(:params) {
+      {:manage_users_allow => ['true']}
+    }
+
+    it 'should fail' do
+      expect {
+        should contain_class('auditusers')
+      }.to raise_error(Puppet::Error,/\["true"\] is not a boolean.  It looks to be a Array/)
+    end
   end
 
   describe 'when setting custom basedir' do
@@ -439,6 +463,18 @@ describe 'auditusers' do
 
   end
 
+  describe 'when setting mount_report_vol to an invalid type' do
+    let(:params) {
+      {:mount_report_vol => ['true']}
+    }
+
+    it 'should fail' do
+      expect {
+        should contain_class('auditusers')
+      }.to raise_error(Puppet::Error,/\["true"\] is not a boolean.  It looks to be a Array/)
+    end
+  end
+
   describe 'when setting fstab_entry to a mount hash' do
 
     let(:params) {
@@ -501,6 +537,28 @@ describe 'auditusers' do
 
     }
 
+  end
+
+  describe 'when setting fstab_entry to an invalid type' do
+    let(:params) {
+      {:fstab_entry => true}
+    }
+
+    it 'should fail' do
+      expect {
+        should contain_class('auditusers')
+      }.to raise_error(Puppet::Error,/fstab entry can either be a hash or undefined/)
+    end
+  end
+
+  describe 'when setting fstab_entry to an empty string' do
+    let(:params) {
+      {:fstab_entry => ''}
+    }
+
+    it {
+      should_not contain_file('report_vol')
+    }
   end
 
   describe 'when using a custom report_dir' do
