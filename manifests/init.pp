@@ -8,27 +8,41 @@
 # writes a file to the report directory.
 #
 class auditusers (
-  $basedir           = '/opt/auditusers',
-  $bindir            = 'bin',
-  $script_name       = 'auditscript.sh',
-  $user              = 'audituser',
-  $uid               = '9000',
-  $domain            = 'example.com',
-  $primary_group     = 'auditgroup',
-  $groups            = undef,
-  $groups_membership = 'minimum',
-  $gid               = '8000',
-  $users_allow       = '/etc/users.allow',
-  $cron_minute       = 'auto',
-  $cron_ensure       = 'present',
-  $report_vol        = '/var/run/auditusers',
-  $fstab_entry       = undef,
-  $mount_report_vol  = true,
-  $report_dir        = 'incoming',
-  $hub               = 'hub',
-  $manage_user       = 'false',
-  $manage_users_allow = 'false',
+  $basedir            = '/opt/auditusers',
+  $bindir             = 'bin',
+  $script_name        = 'auditscript.sh',
+  $user               = 'audituser',
+  $uid                = '9000',
+  $domain             = 'example.com',
+  $primary_group      = 'auditgroup',
+  $groups             = undef,
+  $groups_membership  = 'minimum',
+  $gid                = '8000',
+  $users_allow        = '/etc/users.allow',
+  $cron_minute        = 'auto',
+  $cron_ensure        = 'present',
+  $report_vol         = '/var/run/auditusers',
+  $fstab_entry        = undef,
+  $mount_report_vol   = true,
+  $report_dir         = 'incoming',
+  $hub                = 'hub',
+  $manage_user        = false,
+  $manage_users_allow = false,
 ) {
+
+  if is_string($manage_user) {
+    $manage_user_real = str2bool($manage_user)
+  } else {
+    $manage_user_real = $manage_user
+  }
+  if is_string($manage_users_allow) {
+    $manage_users_allow_real = str2bool($manage_users_allow)
+  } else {
+    $manage_users_allow_real = $manage_users_allow
+  }
+
+  validate_bool($manage_user_real)
+  validate_bool($manage_users_allow_real)
 
   if $groups == undef {
     $the_groups = {}
@@ -57,12 +71,13 @@ class auditusers (
     fail("auditusers::cron_ensure can be either 'present' or 'absent'. It is currently set to ${cron_ensure}")
   }
 
-  $mount_report_vol_type = type($mount_report_vol)
-  if $mount_report_vol_type == 'string' {
+  if is_string($mount_report_vol) {
     $should_mount_report_vol = str2bool($mount_report_vol)
   } else {
     $should_mount_report_vol = $mount_report_vol
   }
+
+  validate_bool($should_mount_report_vol)
 
   if $should_mount_report_vol == true {
     $mount_report_vol_ensure = 'mounted'
@@ -70,19 +85,18 @@ class auditusers (
     $mount_report_vol_ensure = 'absent'
   }
 
-  if $fstab_entry != undef {
+  if $fstab_entry != '' {
     if $should_mount_report_vol == true {
       $report_vol_ensure = 'directory'
     } else {
       $report_vol_ensure = 'absent'
     }
-    $fstab_entry_type = type($fstab_entry)
-    if $fstab_entry_type == 'hash' {
+    if is_hash($fstab_entry) {
       $my_fstab_entry = {'the_mount' => $fstab_entry, }
       $mount_defaults = { 'name'      => $report_vol,
                           'ensure'    => $mount_report_vol_ensure, }
     } else {
-      fail("fstab entry can either be a hash or undefined. fstab_entry is defined as ${fstab_entry_type}.")
+      fail('fstab entry can either be a hash or undefined.')
     }
   }
 
@@ -102,7 +116,7 @@ class auditusers (
     mode   => '0755',
   }
 
-  if $manage_users_allow == 'true' {
+  if $manage_users_allow_real == true {
     exec { 'add_to_users.allow':
       path    => '/usr/xpg4/bin:/bin:/usr/bin:/sbin:/usr/sbin',
       command => "echo ${user}@${domain} >> ${users_allow}",
@@ -111,11 +125,11 @@ class auditusers (
     }
   }
 
-  if $manage_user == 'true' {
+  if $manage_user_real == true {
     group { 'primary_group':
-      ensure  => present,
-      name    => $primary_group,
-      gid     => $gid,
+      ensure => present,
+      name   => $primary_group,
+      gid    => $gid,
     }
 
     if $groups != undef {
@@ -146,7 +160,7 @@ class auditusers (
     require => $audit_script_require
   }
 
-  if $fstab_entry != undef {
+  if $fstab_entry != '' {
 
     if $mount_report_vol_ensure == 'mounted' {
 
